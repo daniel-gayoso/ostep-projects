@@ -10,7 +10,6 @@ int main (int argc, char *argv[]) {
   FILE *fp; // pointer to file stream
   char *line; // pointer for storing the current line
   int line_max; // for checking line limits
-  char *file_name; // pointer to a file name arg
   char *search_term; // pointer to the pattern to search some file or stdin for
   char *result; // pointer for holding the result of strstr
 
