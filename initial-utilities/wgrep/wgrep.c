@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <unistd.h>
+#include <string.h>
 
 #define MYLIMIT 16384
 
@@ -9,9 +10,9 @@ int main (int argc, char *argv[]) {
   FILE *fp; // pointer to file stream
   char *line; // pointer for storing the current line
   int line_max; // for checking line limits
-  char *file_name;
-  char *term;
-  char *input;
+  char *file_name; // pointer to a file name arg
+  char *search_term; // pointer to the pattern to search some file or stdin for
+  char *result; // pointer for holding the result of strstr
 
   if (LINE_MAX >= MYLIMIT) { // bounds check for max length of a line
     line_max = MYLIMIT;
@@ -25,35 +26,51 @@ int main (int argc, char *argv[]) {
       line_max = (int)limit;
     }
   }
-
+  
   if (argc == 1) { // no args passed
     printf("wgrep: searchterm [file ...]\n");
     return 1;
   }
-  else if (argc == 2) { // user wants to search some text in stdin
-    term = argv[1]; 
-    printf("\n"); // new line for user to enter their input
-    fgets(input, line_max, stdin); // read from stdin until user sends newline (enter)
-    
-  }
-  else if (argc >= 3) {
-    line = malloc(line_max + 1): // allocate worst case line size of bytes
-    if (line == NULL) { // check if for valid ptr
+
+  if (argc == 2) { // user wants to search some text in stdin
+    search_term = argv[1];
+    line = malloc(line_max + 1);
+    if (line == NULL) {
       printf("malloc failed, exiting\n");
       return -1;
     }
-    
-  }
-  
-  while (fgets(line, line_max + 1, fp)) {
-    char *found = strstr(line, argv[1]);
-    if (found) { // strstr returned some offset occurence
-      printf("%s", line);
+    while (fgets(line, line_max, stdin)) { // read inputs until user hits Ctrl + D (EOF)
+      result = strstr(line, search_term);
+      if (result) {
+	printf("%s", line);
+      }
     }
+    return 0; 
+  }
+
+  if (argc >= 3) {
+    search_term = argv[1];
+    line = malloc(line_max + 1); // allocate worst case line size of bytes
+    if (line == NULL) { // check if for valid ptr
+      printf("malloc failed, exiting\n");
+      return -1;
+    }  
+    for (int i = 2; i < argc; i++) {
+      fp = fopen(argv[i], "r");
+      if (fp == NULL) {
+	printf("wgrep: cannot open file\n");
+	return 1;
+      }
+      while (fgets(line, line_max, fp)) {
+	result = strstr(line, search_term);
+	if (result) {
+	  printf("%s", line);
+	}
+      }
+    }
+    return 0;
   }
   
-  
-
   free(line);
   return 0;
   
